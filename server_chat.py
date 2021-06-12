@@ -46,7 +46,6 @@ class Server:
                 if message:
                     if str(message.decode()) == "FILE":
                         self.broadcastFile(connection, room_id, user_id)
-
                     else:
                         message_to_send = "" + \
                             str(user_id) + " : " + message.decode()

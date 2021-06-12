@@ -6,6 +6,7 @@ from tkinter import filedialog
 import time
 import threading
 import os
+import re
 
 
 class GUI:
@@ -74,7 +75,7 @@ class GUI:
         self.Window.deiconify()
         self.Window.title("Room Chat")
         self.Window.resizable(width=False, height=False)
-        self.Window.configure(width=470, height=550, bg="#17202A")
+        self.Window.configure(width=470, height=600, bg="#17202A")
         self.chatBoxHead = tk.Label(self.Window,
                                     bg="#17202A",
                                     fg="#EAECEE",
@@ -87,18 +88,43 @@ class GUI:
 
         self.line = tk.Label(self.Window, width=450, bg="#ABB2B9")
 
-        self.line.place(relwidth=1, rely=0.07, relheight=0.012)
+        self.line.place(relwidth=1, rely=0.07, relheight=0.02)
 
         self.textCons = tk.Text(self.Window,
                                 width=20,
-                                height=2,
+                                height=3,
                                 bg="#17202A",
                                 fg="#EAECEE",
                                 font="Helvetica 11",
                                 padx=5,
                                 pady=5)
 
-        self.textCons.place(relheight=0.745, relwidth=1, rely=0.08)
+        self.textCons.place(relheight=0.705, relwidth=1, rely=0.15)
+        
+        # self.textTag = tk.Text(self.Window,
+        #                         width=20,
+        #                         height=2,
+        #                         bg="#46617f",
+        #                         fg="#0368ce",
+        #                         font="Helvetica 11",
+        #                         padx=5,
+        #                         pady=5)
+
+        # self.textTag.place(relheight=0.745, relwidth=1, rely=0.08)
+        self.line = tk.Label(self.Window, width=450, bg="#ABB2B9")
+
+        self.line.place(relwidth=1, rely=0.07, relheight=0.02)
+
+        self.textTag = tk.Text(self.Window,
+                                width=20,
+                                height=2,
+                                bg="#46617f",
+                                fg="#EAECEE",
+                                font="Helvetica 11",
+                                padx=5,
+                                pady=5)
+
+        self.textTag.place(relheight=0.08, relwidth=1, rely=0.08)
 
         self.labelBottom = tk.Label(self.Window, bg="#ABB2B9", height=80)
 
@@ -171,6 +197,15 @@ class GUI:
         scrollbar.config(command=self.textCons.yview)
         self.textCons.config(state=tk.DISABLED)
 
+
+        self.textTag.config(cursor="arrow")
+        scrollbar = tk.Scrollbar(self.textTag)
+        scrollbar.place(relheight=1,
+                        relx=0.974)
+
+        scrollbar.config(command=self.textTag.yview)
+        self.textTag.config(state=tk.DISABLED)
+
     def browseFile(self):
         self.filename = filedialog.askopenfilename(initialdir="/",
                                                    title="Select a file",
@@ -211,6 +246,20 @@ class GUI:
         snd.start()
 
     def receive(self):
+        def checkTag(msg):
+            arrmsg = msg.split(' ')
+            for i in range(len(arrmsg)):
+                # print('check arrmsg:',arrmsg[i])
+                if(re.search('@',arrmsg[i])):
+                    userMention = arrmsg[i].split('@')
+                    if(userMention[1]== self.name):
+                        return(True)
+
+        def parseSender(msg):
+            if(msg!=''):
+                arrmsg = msg.split(' : ')
+                return(arrmsg[0])
+
         while True:
             try:
                 message = self.server.recv(1024).decode()
@@ -238,13 +287,28 @@ class GUI:
                     self.textCons.see(tk.END)
 
                 else:
-                    self.textCons.config(state=tk.DISABLED)
-                    self.textCons.config(state=tk.NORMAL)
-                    self.textCons.insert(tk.END,
-                                         message+"\n\n")
+                    if(checkTag(message)):
+                        self.textTag.config(state=tk.DISABLED)
+                        self.textTag.config(state=tk.NORMAL)
+                        self.textTag.insert(tk.END,
+                                            message+"\n\n")
+                        self.textTag.config(state=tk.DISABLED)
 
-                    self.textCons.config(state=tk.DISABLED)
-                    self.textCons.see(tk.END)
+                        self.textCons.config(state=tk.DISABLED)
+                        self.textCons.config(state=tk.NORMAL)
+                        self.textCons.insert(tk.END,
+                                            "dari "+parseSender(message)+"\n(*)"+message+"\n\n")
+
+                        self.textCons.config(state=tk.DISABLED)
+                        self.textCons.see(tk.END)
+                    else:
+                        self.textCons.config(state=tk.DISABLED)
+                        self.textCons.config(state=tk.NORMAL)
+                        self.textCons.insert(tk.END,
+                                            message+"\n\n")
+
+                        self.textCons.config(state=tk.DISABLED)
+                        self.textCons.see(tk.END)
 
             except:
                 print("An error occured!")
