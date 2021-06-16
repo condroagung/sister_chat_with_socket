@@ -12,24 +12,27 @@ import re
 class GUI:
 
     def __init__(self, ip_address, port):
+        '''
+        Inisiasi pembuatan GUI client
+        '''
         self.server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server.connect((ip_address, port))
 
-        self.Window = tk.Tk()
+        self.Window = tk.Tk()                                           #pembuatan window/ gui client
         self.Window.withdraw()
 
-        self.login = tk.Toplevel()
+        self.login = tk.Toplevel()                                      #pembuatan header untuk login
 
-        self.login.title("Login")
-        self.login.resizable(width=False, height=False)
+        self.login.title("Login")                                       #title window login
+        self.login.resizable(width=False, height=False)                 #set ukuran window login
         self.login.configure(width=400, height=350)
 
         self.pls = tk.Label(self.login,
                             text="Silakan Login Untuk Masuk Chat Room",
                             justify=tk.CENTER,
-                            font="Helvetica 12 bold")
+                            font="Helvetica 12 bold")                   #membuat label pada window login
 
-        self.pls.place(relheight=0.15, relx=0.2, rely=0.07)
+        self.pls.place(relheight=0.15, relx=0.2, rely=0.07)             #set posisi label window login
 
         self.userLabelName = tk.Label(
             self.login, text="Username: ", font="Helvetica 11")
@@ -52,26 +55,32 @@ class GUI:
         self.go = tk.Button(self.login,
                             text="CONTINUE",
                             font="Helvetica 12 bold",
-                            command=lambda: self.goAhead(self.userEntryName.get(), self.roomEntryName.get()))
+                            command=lambda: self.goAhead(self.userEntryName.get(), self.roomEntryName.get()))   #set button continue ke room
 
         self.go.place(relx=0.35, rely=0.62)
 
         self.Window.mainloop()
 
     def goAhead(self, username, room_id=0):
+        '''
+        Perpindahan window login ke group chat
+        '''
         self.name = username
         self.room_id = room_id
-        self.server.send(str.encode(username))
+        self.server.send(str.encode(username))          #mengirimkan nama ke server
         time.sleep(0.1)
-        self.server.send(str.encode(room_id))
+        self.server.send(str.encode(room_id))           #mengirimkan room id ke server
 
-        self.login.destroy()
-        self.layout()
+        self.login.destroy()                            #menghilangkan window login
+        self.layout()                                   #menampilkan window group chat
 
-        rcv = threading.Thread(target=self.receive)
+        rcv = threading.Thread(target=self.receive)     #membuat thread untuk client tertentu
         rcv.start()
 
     def layout(self):
+        '''
+        Tampilan GUI group chat
+        '''
         self.Window.deiconify()
         self.Window.title("Room Chat")
         self.Window.resizable(width=False, height=False)
@@ -101,16 +110,6 @@ class GUI:
 
         self.textCons.place(relheight=0.705, relwidth=1, rely=0.15)
         
-        # self.textTag = tk.Text(self.Window,
-        #                         width=20,
-        #                         height=2,
-        #                         bg="#46617f",
-        #                         fg="#0368ce",
-        #                         font="Helvetica 11",
-        #                         padx=5,
-        #                         pady=5)
-
-        # self.textTag.place(relheight=0.745, relwidth=1, rely=0.08)
         self.line = tk.Label(self.Window, width=450, bg="#ABB2B9")
 
         self.line.place(relwidth=1, rely=0.07, relheight=0.02)
@@ -207,6 +206,9 @@ class GUI:
         self.textTag.config(state=tk.DISABLED)
 
     def browseFile(self):
+        '''
+        Mencari file (txt) untuk dikirim ke server
+        '''
         self.filename = filedialog.askopenfilename(initialdir="/",
                                                    title="Select a file",
                                                    filetypes=(("Text files",
@@ -217,6 +219,9 @@ class GUI:
             text=self.filename)
 
     def sendFile(self):
+        '''
+        Mengirim file beserta ukurannya ke server
+        '''
         self.server.send("FILE".encode())
         time.sleep(0.1)
         self.server.send(
@@ -239,6 +244,9 @@ class GUI:
         self.textCons.see(tk.END)
 
     def sendButton(self, msg):
+        '''
+        Mengirimkan isi text field setelah button ditekan
+        '''
         self.textCons.config(state=tk.DISABLED)
         self.msg = msg
         self.entryMsg.delete(0, tk.END)
@@ -246,7 +254,13 @@ class GUI:
         snd.start()
 
     def receive(self):
+        '''
+        Menerima pesan dari server
+        '''
         def checkTag(msg):
+            '''
+            Mengecek nama yang di tag oleh pengirim pesan dengan nama penerima
+            '''
             arrmsg = msg.split(' ')
             for i in range(len(arrmsg)):
                 # print('check arrmsg:',arrmsg[i])
@@ -256,6 +270,9 @@ class GUI:
                         return(True)
 
         def parseSender(msg):
+            '''
+            Parsing untuk mengetahui nama pengirim pesan
+            '''
             if(msg!=''):
                 arrmsg = msg.split(' : ')
                 return(arrmsg[0])
@@ -264,12 +281,12 @@ class GUI:
             try:
                 message = self.server.recv(1024).decode()
 
-                if str(message) == "FILE":
+                if str(message) == "FILE":                          #jika pesan berupa 'FILE'
                     file_name = self.server.recv(1024).decode()
                     lenOfFile = self.server.recv(1024).decode()
                     send_user = self.server.recv(1024).decode()
 
-                    if os.path.exists(file_name):
+                    if os.path.exists(file_name):                   #jika ada file dengan path/ direktori yang sama maka hapus file
                         os.remove(file_name)
 
                     total = 0
@@ -282,12 +299,12 @@ class GUI:
                     self.textCons.config(state=tk.DISABLED)
                     self.textCons.config(state=tk.NORMAL)
                     self.textCons.insert(
-                        tk.END, " " + str(send_user) + " : " + file_name + " Received a file\n\n")
+                        tk.END,str(send_user) + " send a file!\n\n")
                     self.textCons.config(state=tk.DISABLED)
                     self.textCons.see(tk.END)
 
-                else:
-                    if(checkTag(message)):
+                else:                                               #jika pesan selain 'FILE'
+                    if(checkTag(message)):                          #jika status checkTag bernilai TRUE maka tampilkan hasil tag untuk user
                         self.textTag.config(state=tk.DISABLED)
                         self.textTag.config(state=tk.NORMAL)
                         self.textTag.insert(tk.END,
@@ -301,7 +318,7 @@ class GUI:
 
                         self.textCons.config(state=tk.DISABLED)
                         self.textCons.see(tk.END)
-                    else:
+                    else:                                           #jika status FALSE maka tampilkan pesan
                         self.textCons.config(state=tk.DISABLED)
                         self.textCons.config(state=tk.NORMAL)
                         self.textCons.insert(tk.END,
@@ -316,9 +333,12 @@ class GUI:
                 break
 
     def sendMessage(self):
+        '''
+        Mengirim pesan ke server
+        '''
         self.textCons.config(state=tk.DISABLED)
         while True:
-            if self.msg == "exit":
+            if self.msg == "exit":                              #jika pesan ber-isi 'exit' maka tutup client/user
                 self.server.close()
                 self.Window.destroy()
             self.server.send(self.msg.encode())
@@ -332,6 +352,9 @@ class GUI:
 
 
 if __name__ == "__main__":
+    '''
+    Membuat client dengan ip '127.0.0.1' dan port '12345'
+    '''
     ip_address = "127.0.0.1"
     port = 12345
     g = GUI(ip_address, port)

@@ -1,0 +1,12 @@
+error :
+- tanggal pemesanan tidak ada pada hari yang sesuai (con: kereta hari selasa tidak ada pada tanggal selasa, 27 april 2021)
+- saat dilakukan pemesanan tiket, user diarahkan ke user/riwayat dan terdapat tampilan 'user is not define',
+   pemesanan masuk tapi muncul tampilan tersebut, harus refresh/ balik ke menu sebelum lalu pilih riwayat agar dapat menampilkan hasil pesan tiket
+
+bug :
+- pada halaman user/akun  (info pribadi), set tanggal lahir memiliki beberapa bug :
+	# tampilan tanggal lahir dan 'Tanggal Lahir' berhimpit
+	#user bisa memilih tahun lahir <1900 atau >2021
+	#jenis kelamin berupa input box, bukan dropdown
+	#tidak ada informasi perubahan info pribadi
+- pada halaman pesan tiket, tidak ada 'warning' data stasiun belum diisi
